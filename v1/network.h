@@ -7,17 +7,22 @@
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
+#include <unordered_map>
 
 // Our graph consists of a list of nodes where each node is represented as follows:
 class Graph_Node{
 public:
 	string Node_Name;  // Variable name 
-	vector<int> Children; // Children of a particular node - these are index of nodes in graph.
+	int idx_in_network;
+    vector<int> Children; // Children of a particular node - these are index of nodes in graph.
 	vector<string> Parents; // Parents of a particular node- note these are names of parents
-	int nvalues;  // Number of categories a variable represented by this node can take
+	
+    int nvalues;  // Number of categories a variable represented by this node can take
 	vector<string> values; // Categories of possible values
-	vector<float> CPT; // conditional probability table as a 1-d array . Look for BIF format to understand its meaning
-
+	unordered_map<string,int> valueToInt; //takes in a value and convert it to position.
+    
+    vector<float> CPT; // conditional probability table as a 1-d array . Look for BIF format to understand its meaning
+    vector<int> counts; //Corresponding count for the CPT.
 	// Constructor- a node is initialised with its name and its categories
     Graph_Node(string name,int n,vector<string> vals)
 	{
@@ -189,14 +194,19 @@ void read_network(Network& Alarm)
      					
      				}
      				values.clear();
-     				while(temp.compare("};")!=0)
+     				unordered_map<string , int> t_valueToInt;
+                    while(temp.compare("};")!=0)
      				{
+                        t_valueToInt[temp] = values.size(); //get the value to int conversion.
      					values.push_back(temp);
      					
      					ss2>>temp;
     				}
      				Graph_Node new_node(name,values.size(),values);
-     				int pos=Alarm.addNode(new_node);
+                    new_node.idx_in_network = Alarm.Pres_Graph.size();
+     				new_node.valueToInt = t_valueToInt;
+
+                    int pos=Alarm.addNode(new_node);
 
      				
      		}
