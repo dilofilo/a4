@@ -4,7 +4,10 @@
 #include "trainer.h"
 
 //typedef  vector<std::string> Observation;
+template <typename T>
+void Trainer::iterate_dataset(std::string fname , T func) {
 
+}
 void Trainer::read_data(std::string filename) {
 	fstream datfile; //included in the header file.
 	datfile.open(filename.c_str() , ios::in);
@@ -18,17 +21,25 @@ void Trainer::read_data(std::string filename) {
 		++lines_read;
 		stringstream temp(obs_line);
 		data.push_back( Observation() );
-
 		string var_value;
 		while(std::getline(temp, var_value , ' ')) {
-			if (var_value=="?") {
+			if (var_value=="\"?\"") {
 				complete_value = false;
 			}
 			data[lines_read-1].push_back(var_value);
 		}
+		#define obs data[lines_read-1]
+		// cout << "#brk2\n";
+		updateAll(obs);
+		// cout << "#brk3\n";
+		#undef obs
+
 		obs_line = "";
 		complete_observation.push_back(complete_value);
 	
+	}
+	for(int i=0; i<network.netSize(); ++i) {
+		convertToCPT(network.Pres_Graph[i]);
 	}
 	datfile.close();
 	return;
@@ -38,7 +49,7 @@ void Trainer::read_data(std::string filename) {
 int Trainer::which_case( Observation& obs , Graph_Node& node) {// , vector< vector<int> >& counts ,vector<double>& p)
 	//current node index = idx_in_network.
 	int temp;
-	if ( obs[node.idx_in_network] == "?") {
+	if ( obs[node.idx_in_network] == "\"?\"") {
 		return -1;
 	} else {
 		temp = node.valueToInt[ obs[node.idx_in_network] ];
@@ -64,16 +75,62 @@ int Trainer::which_case( Observation& obs , Graph_Node& node) {// , vector< vect
 	return _case;
 }
 
-void Trainer::update_counts(Graph_Node& n) {
-	for(int i =0; i<data.size(); ++i) {
-		int cas = which_case(data[i] , n);
-		if (cas >= 0) {
-			n.counts[cas] += 1;	
-		}		
+
+void Trainer::updateAll(Observation& obs){
+	// cout << "#brk2.5 , updateall() in\n";
+	for (int i = 0; i < network.Pres_Graph.size(); i++) {
+		// cout << "#brk2.5 , updateall() loop in\n";
+		update_count(network.Pres_Graph[i], obs);
+		// cout << "#brk2.5 , updateall() loop out\n";
+	}
+	// cout << "#brk2.5 , updateall() out\n";
+}
+
+void Trainer::convertToCPT(Graph_Node& n){
+	int jp = n.CPT.size()/n.nvalues;
+	vector<int> sums(jp, 0);
+	for (int i = 0; i < jp; i++){
+		int sum = 0;
+		int t = i;
+		while (t < n.counts.size()){
+			sum += n.counts[t];
+			t+= jp;
+		}
+		sums[i] = sum;
+	}
+	for (int i = 0; i < n.counts.size(); i++){
+		if (sums[i % jp] == 0) 
+			n.CPT[i] = 0.0;
+		else
+			n.CPT[i] = n.counts[i]/double(sums[i % jp]);
 	}
 }
 
+void Trainer::update_count(Graph_Node& n, Observation& obs) {
+	// cout << "#brk2.75 , updatecount() in\n";
+	int cas = which_case(obs , n);
+	// cout << "#brk2.75 , updatecount() after which case\n";
+	if (cas >= 0) {
+		n.counts[cas] += 1;
+	}
+	// cout << "#brk2.75 , updatecount() out\n";
+}
+
 void Trainer::write_data() {
-	return;
+	std::cout << "total error=" << error << "\n";
+	for (int i = 0; i < network.Pres_Graph.size(); i++)
+		network.Pres_Graph[i].print(std::cout);
+
+	
+}
+
+
+void Trainer::calc_error() {
+	
+	for(int i=0; i< network.Pres_Graph.size(); ++i) {
+		for(int c=0; c< network.Pres_Graph[i].CPT.size(); ++c) {
+			error += abs( network.Pres_Graph[i].CPT[c] - gold_network.Pres_Graph[i].CPT[c]) ;
+		}
+	}
 }
 #endif

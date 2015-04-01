@@ -6,9 +6,10 @@
 #include <list>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 #include <cstdlib>
 #include <unordered_map>
-
+#include <iterator>
 // Our graph consists of a list of nodes where each node is represented as follows:
 class Graph_Node{
 public:
@@ -38,6 +39,20 @@ public:
 	{
 		return Children;
 	}
+
+    void print(std::ostream& o){
+        o << "current_node: " << Node_Name << "\nParents: ";
+        std::copy( Parents.begin(), Parents.end() ,std::ostream_iterator<string>(o, ", ")); 
+        
+        o << '\n';
+        for (int i = 0; i < CPT.size(); i++){
+            o << CPT[i] << " ";
+        }
+
+        o << '\n';
+    }
+
+
 	vector<string> get_Parents()
 	{
 		return Parents;
@@ -153,15 +168,22 @@ public:
         return listIt;
     }
 	
-
+    void fixup();
 };
 
-void read_network(Network& Alarm)
+void Network::fixup() {
+    for (int i=0; i<Pres_Graph.size(); ++i) {
+        Pres_Graph[i].counts.resize( Pres_Graph[i].CPT.size() , 0);
+    }
+}
+
+
+void read_network(Network& Alarm , std::string fname)
 {
 	//Network Alarm;
 	string line;
 	int find=0;
-  	ifstream myfile("alarm.bif"); 
+  	ifstream myfile(fname.c_str()); 
   	string temp;
   	string name;
   	vector<string> values;
@@ -259,7 +281,8 @@ void read_network(Network& Alarm)
     	if(find==1)
     	myfile.close();
   	}  	
-  	//return Alarm;
+  	Alarm.fixup();
+    //return Alarm;
 }
 
 #endif

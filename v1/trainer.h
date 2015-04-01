@@ -19,16 +19,25 @@ void remove_quotes(std::string& x) {
 class Trainer {
 public:
 	Network network; /* contains the CPT. */
+	Network gold_network;
+	double error;
 	vector<Observation> data; 			//All observations.
 	std::vector<bool> complete_observation; //tells if the observation is complete or not.
-
+	
 	Trainer() {}
 	~Trainer() {}
 	/* I/O functions. */
+	template <typename T>
+	void iterate_dataset(std::string fname ,T func);
 	void read_data(std::string fname);
 	int which_case(Observation& obs , Graph_Node& node);
-	void update_counts(Graph_Node& n);
+	void updateAll(Observation& obs);
+	void update_count(Graph_Node& n , Observation& obs);
+	void convertToCPT(Graph_Node&);
 	//void probability_given_evidence( Graph_Node node , vector<int>& counts ,double& p); //from data.
 	void write_data();
+
+	/* compute error. */
+	void calc_error();
 };
 #endif
