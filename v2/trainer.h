@@ -44,7 +44,7 @@ public:
 	std::vector<bool> complete_observation; //tells if the observation is complete or not.
 	
 	/* cpt tables to be constructed...*/
-	std::vector<std::vector<float> >* cpt[3]; //old and new and best yet
+	std::vector<std::vector<float> >* cpt[3];//the one construct in em, and the last one (where i derive my assigns from) and best yet(if restarts)
 	//NOTE : To access cpt, use (*cpt[0,1,2])[nodeIDX][case] its an array of pointers.
 
 
@@ -53,35 +53,28 @@ public:
 	std::vector<int> idx_incomplete_obs; //Which data-points' are incomplete? saved by their index.
 	std::vector<int> incomplete_node; //In each datapoint, which node is the incomplete node? -1 if 
 
-	Trainer() {
-		/* start the time, prevent segfaults, and go. */
+	Trainer() { 		/* set seed. start the time, prevent segfaults, and go. */
+		srand(time(NULL));
 		clocky = clock();
 		maxtime = TEN_MINUTES; //10 minutes.
 		cpt[0] = new std::vector<std::vector<float> >();
 		cpt[1] = new std::vector<std::vector<float> >();
 		cpt[2] = new std::vector<std::vector<float> >(); //stores the best so far.
 	}
-	~Trainer() {
-		/* cleanup behind ourselves. we aint dogs bruh. */
+	~Trainer() {/* cleanup behind ourselves. we aint dogs bruh. */
 		delete cpt[0];
 		delete cpt[1];
 		delete cpt[2];
 	}
-
 	/* now for miscellaneous functions. */
-
-
 	void calc_error();
-	
 	int which_case(Observation& obs , Graph_Node& node); //tells me which thing of the nodes's cpt the observation counts for.
 	int case_offset(Observation& obs, Graph_Node& node); // if obs[node] = 0th value of node, tells me the case. i.e , offset
-	
 	int which_node_is_incomplete(Observation& obs) {
 		for(int i=0; i<network.netSize(); ++i) {
 			if ( obs[i] == "\"?\"") return i;
 		} return -1;
-	}
-	
+	}	
 	void swap_cpts(int i=0, int j=1) { //swaps the ith and jth cpts.
 		std::vector<std::vector<float> >* temp = cpt[i];
 		cpt[i] = cpt[j];
@@ -96,13 +89,14 @@ public:
 	void convertToCPT(Graph_Node&); //convert the counts to CPT for each node. Also sets cpt[2]
 
 	/* I/O Functions */
-	void read_data(std::string fname);
+	void initialize_cpts();
+	void read_data(std::string fname); //cpt[0,1,2] are initialized here.
 	void write_data(std::ostream& o = std::cout);
 
 
 	/* now, for em.	*/
-	float probability(int idxNode, int idxValue , Observation& obs); /* this returns P( node{idxNode} = */
-	
+	float probability(int idxNode, int idxValue , Observation& obs); /* this returns log10(P( node{idxNode} ) */
+	float probability_given_parents(int idxNode, int idxValue , Observation& obs , int cpt_source=1);
 	/* bulk functions */
 	void bulk_em_loop(); //this essentially calls assign incomplete and then generate_newcpt until convergence.
 	void bulk_recompute_cpt();

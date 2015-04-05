@@ -85,15 +85,27 @@ void Trainer::convertToCPT(Graph_Node& n){ //converts counts to
 	for (int i = 0; i < n.counts.size(); i++){
 		if (sums[i % jp] == 0) {
 			n.CPT[i] = 0.0;
-			(*cpt[2])[n.idx_in_network][i] = 0.0;
 		} else {
 			n.CPT[i] = n.counts[i]/double(sums[i % jp]);
-			(*cpt[2])[n.idx_in_network][i] = n.CPT[i];
 		}	
 	}
 }
 
 /* IO FUNCTIONS FOLLOW. */
+
+void Trainer::initialize_cpts() {
+	(*cpt[0]).resize(network.Pres_Graph.size());
+	(*cpt[1]).resize(network.Pres_Graph.size());
+	(*cpt[2]).resize(network.Pres_Graph.size());
+	for (int i=0; i<  network.Pres_Graph.size(); ++i) {
+		(*cpt[0])[i].resize( network.Pres_Graph[i].CPT.size() , -1);
+		for(int j=0; j<network.Pres_Graph[i].CPT.size(); ++i) {
+			(*cpt[1])[i].push_back(network.Pres_Graph[i].CPT[j]);
+			(*cpt[2])[i].push_back(network.Pres_Graph[i].CPT[j]);
+		}
+	}
+
+}
 
 /* reads raw data and puts it into member field called data. */
 void Trainer::read_data(std::string filename) {
@@ -140,6 +152,7 @@ void Trainer::read_data(std::string filename) {
 		convertToCPT(network.Pres_Graph[i]);
 	}
 	datfile.close();
+	initialize_cpts();
 	return;
 }
 

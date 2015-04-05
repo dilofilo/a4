@@ -13,12 +13,48 @@ bool numerical_convergence(float a, float b, float tolerance=0.0001) {
 }
 
 
+/* --------------------------------------------------------------------------------------------- */
+
+
+/* P(X = w{i} | obs) */
+float Trainer::probability(int idxNode , int idxValue , Observation& obs) {
+	//calculate it from cpt[0].
+	float ans= probability_given_parents(idxNode,idxValue,obs);
+	for(int i=0 ; network.Pres_Graph[idxNode].Children.size(); ++i) {
+		//the hashdefine is, for the given node, for its child-node, get the int of its value.
+		#define idxChildValue network.Pres_Graph[network.Pres_Graph[idxNode].Children[i]].valueToInt[obs[network.Pres_Graph[idxNode].Children[i]]]
+		if ( obs[idxNode] != "\"?\"") {
+			ans += probability_given_parents( network.Pres_Graph[idxNode].Children[i] , idxChildValue , obs);
+		} else {
+			obd[idxNode] = network.Pres_Graph[idxNode].values[idxValue];
+			ans += probability_given_parents( network.Pres_Graph[idxNode].Children[i] , idxChildValue , obs);
+			obs[idxNode] = "\"?\"";
+		}
+		#undef idxChildValue
+	}
+	return ans;
+}
+
+/* take values from cpt */
+#define EPSILON 0.000001
+float Trainer::probability_given_parents(int idxNode , int idxValue , Observation& obs , int cpt_source/*=1*/) {
+	#define node network.Pres_Graph[idxNode]
+	int _case = case_offset(obs, node);
+	int valsize = node.CPT.size()/node.nvalues; //size of each block-thingy.
+	_case += idxValue*valsize;
+	float x = (*cpt[cpt_source])[idxNode][_case];
+	#undef node
+	return log10(((x==0)?(EPSILON):(x)));
+}
+/* assigns value to idxNode of obs. */
 void Trainer::assign_value(Observation& obs , int idxNode) {
 	int offset = case_offset(obs, network.Pres_Graph[idxNode]);
 	int case_size = network.Pres_Graph[idxNode].CPT.size()/network.Pres_Graph[idxNode].nvalues;
 	int idx_cpt=offset;
 	//I now know which case to use.
-	float toincoss = rng();
+	float x = rng(); // range:=(0,1)
+	float toincoss = log10(((x==0)?(EPSILON):(x)));
+	//this here can be impoved.	
 
 	for(int i=0; i< network.Pres_Graph[idxNode].nvalues;  ++i) {
 		if (toincoss < probability( idxNode , i , obs )) {
@@ -29,25 +65,40 @@ void Trainer::assign_value(Observation& obs , int idxNode) {
 		}
 	}
 }
+#undef EPSILON
 
 void Trainer::bulk_em_loop() {
-	//The working data is not complete.
+	//The working data is not complete, hence, do em on that.
 	do {//Assign values to each incomplete data point.
 		for(int i=0; i<idx_incomplete_obs.size(); ++i) {
 			assign_value( working_data[idx_incomplete_obs[i]] , incomplete_node[idx_incomplete_obs[i]]);
-		}
+		} //assign values to each node.
 		bulk_recompute_cpt();
 		swap_cpts();
 	} while ( !convergence() );
-}
-/* P(X = w{i} | obs) */
-float Trainer::probability(int idxNode , int idxValue , Observation& obs) {
-	//calculate it from cpt[0].
+	swap_cpts(1,2); //move the last cpt into the best cpt.
 }
 
-/* recompute the cpt using the dataset. */
+/* recompute the cpt using the dataset. put the new cpt into cpt[0] */
 void Trainer::bulk_recompute_cpt() {
+	//initialize the counts.
+	std::vector<std::vector<int> > counts(network.Pres_Graph.size());
+	for(int i=0; i<network.Pres_Graph.size(); ++i) {
+		counts[i].resize(network.Pres_Graph[i].CPT.size(),-1);
+	}
+	/* count! */
+	for(int i=0; i<working_data.size(); ++i) {
+		for(int n=0; n<counts.size(); ++n) {
+			int c = which_case(working_data[i] , network.Pres_Graph[n]);
+			if (c >= 0) {
+				counts[n][c]++;
+			} else {
+				cout << " invalid data point found during em\n";	
+			}
+		}
+	}
 
+	//TODO : Convert counts into cpt[1].
 }
 
 
@@ -58,7 +109,7 @@ bool Trainer::convergence() {
 	if ( (clocky/(float)(CLOCKS_PER_SEC)) > maxtime - TIME_BUFFER) {
 		return true;
 	} else {
-		//check for convergence.
+		//check for convergence between cpt[0] and cpt[1]
 	}
 }
 #endif
