@@ -50,8 +50,15 @@ void Trainer::bulk_recompute_cpt() {
 
 }
 
+
+#define TIME_BUFFER 10
 /* in corporate */
 bool Trainer::convergence() {
-	return false;
+	clocky = clock();
+	if ( (clocky/(float)(CLOCKS_PER_SEC)) > maxtime - TIME_BUFFER) {
+		return true;
+	} else {
+		//check for convergence.
+	}
 }
 #endif

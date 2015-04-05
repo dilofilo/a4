@@ -3,6 +3,98 @@
 
 #include "trainer.h"
 
+
+void Trainer::calc_error() {
+	for(int i=0; i< network.Pres_Graph.size(); ++i) {
+		for(int c=0; c< network.Pres_Graph[i].CPT.size(); ++c) {
+			error += abs( network.Pres_Graph[i].CPT[c] - gold_network.Pres_Graph[i].CPT[c]) ;
+		}
+	}
+}
+
+/* returns the index in the cpt to which this case(i.e, obs) belongs */
+int Trainer::which_case( Observation& obs , Graph_Node& node) {
+	int temp;
+	if ( obs[node.idx_in_network] == "\"?\"") {
+		return -1;
+	} else {
+		temp = node.valueToInt[ obs[node.idx_in_network] ];
+	}
+	int _case = 0;
+	int acc=1;
+	int digit;
+	string r;
+	for ( int i= node.Parents.size()-1; i >= 0; i--) {
+		if( ( r = obs[ network.name_to_idx[node.Parents[i]] ] )== "?" ) {
+			return -1;
+		}
+		Graph_Node* tempptr = &network.Pres_Graph[ network.name_to_idx[node.Parents[i]] ];
+		digit = acc*(tempptr->valueToInt[ r ]);
+		_case += digit;
+		acc*= tempptr->nvalues;
+		tempptr = NULL;
+	}
+	_case += acc*temp;
+	return _case;
+}
+/*if obs[node] = 0th value of node, tells me the case. i.e , offset*/
+int Trainer::case_offset(Observation& obs, Graph_Node& node) {
+	int _case = 0;
+	int acc=1;
+	int digit;
+	string r;
+	for ( int i= node.Parents.size()-1; i >= 0; i--) {
+		if( ( r = obs[ network.name_to_idx[node.Parents[i]] ] )== "?" ) {
+			return -1;
+		}
+		Graph_Node* tempptr = &network.Pres_Graph[ network.name_to_idx[node.Parents[i]] ];
+		digit = acc*(tempptr->valueToInt[ r ]);
+		_case += digit;
+		acc*= tempptr->nvalues;
+		tempptr = NULL;
+	}
+	return _case;
+}
+
+void Trainer::updateAll_CPT_using_observation(Observation& obs){
+	for (int i = 0; i < network.Pres_Graph.size(); i++) {
+		update_count(network.Pres_Graph[i], obs);
+	}
+}
+
+void Trainer::update_count(Graph_Node& n, Observation& obs) {
+	int cas = which_case(obs , n);
+	if (cas >= 0) {
+		n.counts[cas] += 1;
+	}
+}
+
+
+void Trainer::convertToCPT(Graph_Node& n){ //converts counts to 
+	int jp = n.CPT.size()/n.nvalues;
+	vector<int> sums(jp, 0);
+	for (int i = 0; i < jp; i++){
+		int sum = 0;
+		int t = i;
+		while (t < n.counts.size()){
+			sum += n.counts[t];
+			t+= jp;
+		}
+		sums[i] = sum;
+	}
+	for (int i = 0; i < n.counts.size(); i++){
+		if (sums[i % jp] == 0) {
+			n.CPT[i] = 0.0;
+			(*cpt[2])[n.idx_in_network][i] = 0.0;
+		} else {
+			n.CPT[i] = n.counts[i]/double(sums[i % jp]);
+			(*cpt[2])[n.idx_in_network][i] = n.CPT[i];
+		}	
+	}
+}
+
+/* IO FUNCTIONS FOLLOW. */
+
 /* reads raw data and puts it into member field called data. */
 void Trainer::read_data(std::string filename) {
 	fstream datfile; //included in the header file.
@@ -67,95 +159,11 @@ void Trainer::write_data(std::ostream& o /*= std::cout*/) {
 			o << " " << network.Pres_Graph[i].Parents[j] << " ";
 		} o << " ) {\n \t table";
 		for(int j=0; j<network.Pres_Graph[i].nvalues; ++j) {
-			o << network.Pres_Graph[i].CPT[j] << " ";
+			o << (*cpt[2])[i][j] << " "; //prints out the best cpt evah
 		} o << ";\n}\n";
 	}
 }
 
-/* returns the index in the cpt to which this case(i.e, obs) belongs */
-int Trainer::which_case( Observation& obs , Graph_Node& node) {
-	int temp;
-	if ( obs[node.idx_in_network] == "\"?\"") {
-		return -1;
-	} else {
-		temp = node.valueToInt[ obs[node.idx_in_network] ];
-	}
-	int _case = 0;
-	int acc=1;
-	int digit;
-	string r;
-	for ( int i= node.Parents.size()-1; i >= 0; i--) {
-		if( ( r = obs[ network.name_to_idx[node.Parents[i]] ] )== "?" ) {
-			return -1;
-		}
-		Graph_Node* tempptr = &network.Pres_Graph[ network.name_to_idx[node.Parents[i]] ];
-		digit = acc*(tempptr->valueToInt[ r ]);
-		_case += digit;
-		acc*= tempptr->nvalues;
-		tempptr = NULL;
-	}
-	_case += acc*temp;
-	return _case;
-}
-/*if obs[node] = 0th value of node, tells me the case. i.e , offset*/
-int Trainer::case_offset(Observation& obs, Graph_Node& node) {
-	int _case = 0;
-	int acc=1;
-	int digit;
-	string r;
-	for ( int i= node.Parents.size()-1; i >= 0; i--) {
-		if( ( r = obs[ network.name_to_idx[node.Parents[i]] ] )== "?" ) {
-			return -1;
-		}
-		Graph_Node* tempptr = &network.Pres_Graph[ network.name_to_idx[node.Parents[i]] ];
-		digit = acc*(tempptr->valueToInt[ r ]);
-		_case += digit;
-		acc*= tempptr->nvalues;
-		tempptr = NULL;
-	}
-	return _case;
-}
-void Trainer::updateAll_CPT_using_observation(Observation& obs){
-	for (int i = 0; i < network.Pres_Graph.size(); i++) {
-		update_count(network.Pres_Graph[i], obs);
-	}
-}
-
-void Trainer::convertToCPT(Graph_Node& n){ //converts counts to 
-	int jp = n.CPT.size()/n.nvalues;
-	vector<int> sums(jp, 0);
-	for (int i = 0; i < jp; i++){
-		int sum = 0;
-		int t = i;
-		while (t < n.counts.size()){
-			sum += n.counts[t];
-			t+= jp;
-		}
-		sums[i] = sum;
-	}
-	for (int i = 0; i < n.counts.size(); i++){
-		if (sums[i % jp] == 0) 
-			n.CPT[i] = 0.0;
-		else
-			n.CPT[i] = n.counts[i]/double(sums[i % jp]);
-	}
-}
-
-void Trainer::update_count(Graph_Node& n, Observation& obs) {
-	int cas = which_case(obs , n);
-	if (cas >= 0) {
-		n.counts[cas] += 1;
-	}
-}
-
-
-void Trainer::calc_error() {
-	for(int i=0; i< network.Pres_Graph.size(); ++i) {
-		for(int c=0; c< network.Pres_Graph[i].CPT.size(); ++c) {
-			error += abs( network.Pres_Graph[i].CPT[c] - gold_network.Pres_Graph[i].CPT[c]) ;
-		}
-	}
-}
 
 #include "em.cpp"
 
