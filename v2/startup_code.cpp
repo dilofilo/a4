@@ -19,10 +19,8 @@ int main(int argc, char** argv)
 	read_network(trainer.network, "alarm.bif"); //reads alarm.bif
     read_network(trainer.gold_network, "gold_alarm.bif"); //reads alarm.bif
     trainer.read_data("records.dat"); //also does counting.
-    trainer.calc_error();
-    trainer.network.toposort();
+    trainer.bulk_em_loop();
 	cout<<"Perfect! Hurrah! \n";
-	
 }
 
 

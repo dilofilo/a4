@@ -26,7 +26,7 @@ float Trainer::probability(int idxNode , int idxValue , Observation& obs) {
 		if ( obs[idxNode] != "\"?\"") {
 			ans += probability_given_parents( network.Pres_Graph[idxNode].Children[i] , idxChildValue , obs);
 		} else {
-			obd[idxNode] = network.Pres_Graph[idxNode].values[idxValue];
+			obs[idxNode] = network.Pres_Graph[idxNode].values[idxValue];
 			ans += probability_given_parents( network.Pres_Graph[idxNode].Children[i] , idxChildValue , obs);
 			obs[idxNode] = "\"?\"";
 		}
@@ -97,8 +97,30 @@ void Trainer::bulk_recompute_cpt() {
 			}
 		}
 	}
-
-	//TODO : Convert counts into cpt[1].
+	for(int n=0; n<counts.size(); ++n) {
+		//for each node, normalize.
+		#define node network.Pres_Graph[n]
+		int jp = node.CPT.size()/node.nvalues;
+		vector<int> sums(jp, 0);
+		for (int i = 0; i < jp; i++){
+			int sum = 0;
+			int t = i;
+			while (t < counts[n].size()){
+				sum += counts[n][t];
+				t += jp;
+			}
+			sums[i] = sum;
+		} 
+		#undef node
+		for(int i=0; i<counts[n].size(); ++i) {
+			if ( sums[i%jp] == 0 ) {
+				(*cpt[1])[n][i] = 0.0;
+			} else {
+				(*cpt[1])[n][i] = counts[n][i]/(float)sums[i%jp];
+			}
+		}
+		//TODO : Smoothen?
+	}
 }
 
 
@@ -110,6 +132,17 @@ bool Trainer::convergence() {
 		return true;
 	} else {
 		//check for convergence between cpt[0] and cpt[1]
+		float inter_cpt_error=0.0;
+		float gold_error=0.0;
+		for(int n=0; n<network.Pres_Graph.size(); ++n) {
+			for(int c=0; c < network.Pres_Graph[n].CPT.size(); ++c) {
+				inter_cpt_error += abs( (*cpt[0])[n][c] - (*cpt[1])[n][c] );
+				gold_error += abs( (*cpt[0])[n][c] - gold_network.Pres_Graph[n].CPT[c]);
+			}
+		}
+		cout << " error between cpt[0],cpt[1]=" << inter_cpt_error << "\n";
+		cout << "error between cpt[1] and golden network =" << gold_error << "\n";
+		return false;
 	}
 }
 #endif
