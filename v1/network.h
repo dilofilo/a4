@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <iterator>
 // Our graph consists of a list of nodes where each node is represented as follows:
+using namespace std;
 class Graph_Node{
 public:
 	string Node_Name;  // Variable name 
@@ -137,14 +138,7 @@ public:
         return listIt;
         //f the shit that follows.
 
-        int count=0;
-        for(listIt=Pres_Graph.begin();listIt!=Pres_Graph.end();listIt++)
-        {
-            if(count==n)
-                return listIt;
-            count++;
-        }
-        return listIt; 
+ 
     }
     //get the iterator of a node with a given name
     vector<Graph_Node>::iterator search_node(string val_name)

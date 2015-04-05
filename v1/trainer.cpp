@@ -3,11 +3,7 @@
 
 #include "trainer.h"
 
-//typedef  vector<std::string> Observation;
-template <typename T>
-void Trainer::iterate_dataset(std::string fname , T func) {
 
-}
 void Trainer::read_data(std::string filename) {
 	fstream datfile; //included in the header file.
 	datfile.open(filename.c_str() , ios::in);
@@ -46,7 +42,7 @@ void Trainer::read_data(std::string filename) {
 }
 
 /* returns the index in the cpt to which this case(i.e, obs) belongs */
-int Trainer::which_case( Observation& obs , Graph_Node& node) {// , vector< vector<int> >& counts ,vector<double>& p)
+int Trainer::which_case( Observation& obs , Graph_Node& node) {
 	//current node index = idx_in_network.
 	int temp;
 	if ( obs[node.idx_in_network] == "\"?\"") {
@@ -104,6 +100,19 @@ void Trainer::convertToCPT(Graph_Node& n){
 		else
 			n.CPT[i] = n.counts[i]/double(sums[i % jp]);
 	}
+}
+
+
+vector<vector<float> > Trainer::CPT(){
+	#define graph network.Pres_Graph
+	vector<vector<float> > CPT_table;
+	for (int i = 0; i < graph.size(); i++){
+		CPT_table.push_back(graph[i].CPT);
+	}
+
+
+	#undef graph
+	return CPT_table;
 }
 
 void Trainer::update_count(Graph_Node& n, Observation& obs) {
