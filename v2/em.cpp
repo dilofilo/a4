@@ -16,22 +16,19 @@ bool numerical_convergence(float a, float b, float tolerance=0.0001) {
 /* --------------------------------------------------------------------------------------------- */
 
 
-/* P(X = w{i} | obs) */
+/* P(X = value{idxValue} | obs) */
 float Trainer::probability(int idxNode , int idxValue , Observation& obs) {
 	//calculate it from cpt[0].
+	std::string original = obs[idxNode];
+	obs[idxNode] = network.Pres_Graph[idxNode].values[idxValue];
 	float ans= probability_given_parents(idxNode,idxValue,obs);
-	for(int i=0 ; network.Pres_Graph[idxNode].Children.size(); ++i) {
+	for(int i=0 ; i<network.Pres_Graph[idxNode].Children.size(); ++i) {
 		//the hashdefine is, for the given node, for its child-node, get the int of its value.
 		#define idxChildValue network.Pres_Graph[network.Pres_Graph[idxNode].Children[i]].valueToInt[obs[network.Pres_Graph[idxNode].Children[i]]]
-		if ( obs[idxNode] != "\"?\"") {
-			ans += probability_given_parents( network.Pres_Graph[idxNode].Children[i] , idxChildValue , obs);
-		} else {
-			obs[idxNode] = network.Pres_Graph[idxNode].values[idxValue];
-			ans += probability_given_parents( network.Pres_Graph[idxNode].Children[i] , idxChildValue , obs);
-			obs[idxNode] = "\"?\"";
-		}
+		ans += probability_given_parents( network.Pres_Graph[idxNode].Children[i] , idxChildValue , obs);
 		#undef idxChildValue
 	}
+	obs[idxNode] = original;
 	return ans;
 }
 
@@ -44,7 +41,7 @@ float Trainer::probability_given_parents(int idxNode , int idxValue , Observatio
 	_case += idxValue*valsize;
 	float x = (*cpt[cpt_source])[idxNode][_case];
 	#undef node
-	return log10(((x==0)?(EPSILON):(x)));
+	return log10(((x<EPSILON)?(EPSILON):(x)));
 }
 /* assigns value to idxNode of obs. */
 void Trainer::assign_value(Observation& obs , int idxNode) {
@@ -53,11 +50,14 @@ void Trainer::assign_value(Observation& obs , int idxNode) {
 	int idx_cpt=offset;
 	//I now know which case to use.
 	float x = rng(); // range:=(0,1)
-	float toincoss = log10(((x==0)?(EPSILON):(x)));
+	float toincoss = log10(((x<EPSILON)?(EPSILON):(x)));
 	//this here can be impoved.	
-
+	vector<float> consideration;
 	for(int i=0; i< network.Pres_Graph[idxNode].nvalues;  ++i) {
-		if (toincoss < probability( idxNode , i , obs )) {
+		consideration.push_back( consideration[consideration.size()-1] + probability( idxNode , i , obs ) );
+	}
+	for(int i=0; i< network.Pres_Graph[idxNode].nvalues;  ++i) {
+		if (toincoss < consideration[i]) {
 			obs[idxNode] = network.Pres_Graph[idxNode].values[i];
 			return;
 		} else {
@@ -70,6 +70,7 @@ void Trainer::assign_value(Observation& obs , int idxNode) {
 void Trainer::bulk_em_loop() {
 	//The working data is not complete, hence, do em on that.
 	do {//Assign values to each incomplete data point.
+		// the sizes are ok.
 		for(int i=0; i<idx_incomplete_obs.size(); ++i) {
 			assign_value( working_data[idx_incomplete_obs[i]] , incomplete_node[idx_incomplete_obs[i]]);
 		} //assign values to each node.
@@ -93,7 +94,7 @@ void Trainer::bulk_recompute_cpt() {
 			if (c >= 0) {
 				counts[n][c]++;
 			} else {
-				cout << " invalid data point found during em\n";	
+				// cout << " invalid data point found during em\n";	
 			}
 		}
 	}
@@ -128,7 +129,7 @@ void Trainer::bulk_recompute_cpt() {
 /* in corporate */
 bool Trainer::convergence() {
 	clocky = clock();
-	if ( (clocky/(float)(CLOCKS_PER_SEC)) > maxtime - TIME_BUFFER) {
+	if ( ((clocky/(float)(CLOCKS_PER_SEC)) > (maxtime - TIME_BUFFER))) {
 		return true;
 	} else {
 		//check for convergence between cpt[0] and cpt[1]
@@ -144,5 +145,6 @@ bool Trainer::convergence() {
 		cout << "error between cpt[1] and golden network =" << gold_error << "\n";
 		return false;
 	}
+
 }
 #endif

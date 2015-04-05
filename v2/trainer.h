@@ -20,7 +20,7 @@
 /* Each observation is just a sequence of strings */
 typedef  vector<std::string> Observation;
 #define TEN_MINUTES 600
-
+#define TEN_SECONDS 60
 using namespace std;
 
 void remove_quotes(std::string& x) {
@@ -56,7 +56,7 @@ public:
 	Trainer() { 		/* set seed. start the time, prevent segfaults, and go. */
 		srand(time(NULL));
 		clocky = clock();
-		maxtime = TEN_MINUTES; //10 minutes.
+		maxtime = TEN_SECONDS; //10 minutes.
 		cpt[0] = new std::vector<std::vector<float> >();
 		cpt[1] = new std::vector<std::vector<float> >();
 		cpt[2] = new std::vector<std::vector<float> >(); //stores the best so far.
