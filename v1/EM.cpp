@@ -1,3 +1,5 @@
+#ifndef EM_CPP
+#define EM_CPP
 #include "trainer.h"
 #include <iostream>
 #include <algorithm>
@@ -20,10 +22,10 @@ void probability_table(Trainer& ,Network& n,int node_index, Observation& obs, st
 float probability(Trainer&,Network&,int node_index, std::string& val, Observation& obs);
 void complete_data(Network&,Observation& obs,float val ,int node_index, vector<float>& table);
 void EM(Trainer& t,Network& a, Observation&  obs);
-
+void EM2(Trainer& t, Network& a);
 
 bool numerical_conv(float& a, float& b, float tolerance = 0.0001){
-	return abs(a-b) < tolerance;
+	return abs(a-b) <= tolerance;
 }
 
 bool converges(std::vector<CPT>& a, std::vector<CPT> & b){
@@ -61,7 +63,6 @@ void EM_complete_data(Trainer& t){
 	#undef DATA	
 	#undef a
 }
-
 
 void EM(Trainer& t,Network& a, Observation&  obs){
 	assert (!is_complete(obs));
@@ -183,7 +184,7 @@ float probability(Trainer& t,Network& n, int node_index, std::string& val, Obser
 
 
 
-int main(){
+/*int main(){
 	Trainer trainer;
 	read_network(trainer.network, "alarm.bif"); 
 	
@@ -193,3 +194,5 @@ int main(){
 	trainer.calc_error();
 
 }
+*/
+#endif

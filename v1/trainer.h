@@ -11,6 +11,9 @@
 #include <algorithm>
 #include <functional>
 #include "network.h"
+#include <cassert>
+#include <time.h>
+
 /* Each observation is just a sequence of */
 using namespace std;
 typedef  vector<string> Observation;
@@ -26,7 +29,7 @@ void remove_quotes(std::string& x) {
 
 
 void sort_incomplete_data(Network&, vector<Observation>&);
-int incomplete_node(Observation&);
+int incomplete_node(const Observation&);
 vector<int> topological_ordering(Network&);
 void DFS(Network&, stack<int>&);
 void DFS_recur(Network&, vector<int>&, int, stack<int>&);
@@ -36,7 +39,7 @@ struct topo_ordering
 {
 	vector<int> order;
 	topo_ordering(vector<int>& o): order(o){}
-	bool operator()(Observation& a, Observation& b){
+	bool operator()(const std::vector<string>& a,const std::vector<string>& b){
 		int _a = incomplete_node(a);
 		int _b = incomplete_node(b);
 		if (_a != -1 && _b != -1) {
@@ -58,7 +61,7 @@ void sort_incomplete_data(Network& n, vector<Observation>& data){
 	sort(data.begin(), data.end(), sorter);
 }
 
-int incomplete_node(Observation& obs){
+int incomplete_node(const Observation& obs){
 	
 	for (int i = 0; i < obs.size(); i++)
 		if (obs[i] == "\"?\"")
@@ -111,12 +114,14 @@ class Trainer {
 public:
 	Network network; /* contains the CPT. */
 	Network gold_network;
-	double error;
+	float error;
 	vector<Observation> data; 			//All observations.
 	std::vector<bool> complete_observation; //tells if the observation is complete or not.
 	
 
-	Trainer() {}
+	Trainer() {
+		srand(time(NULL));
+	}
 	~Trainer() {}
 
 
@@ -130,6 +135,6 @@ public:
 	
 	vector<vector<float> > CPT();     
 	/* compute error. */
-	void calc_error();
+	float calc_error();
 };
 #endif
