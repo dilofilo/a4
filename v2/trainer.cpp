@@ -98,13 +98,12 @@ void Trainer::initialize_cpts() {
 	(*cpt[1]).resize(network.Pres_Graph.size());
 	(*cpt[2]).resize(network.Pres_Graph.size());
 	for (int i=0; i<  network.Pres_Graph.size(); ++i) {
-		(*cpt[0])[i].resize( network.Pres_Graph[i].CPT.size() , -1);
 		for(int j=0; j<network.Pres_Graph[i].CPT.size(); ++j) {
+			(*cpt[0])[i].push_back(network.Pres_Graph[i].CPT[j]);
 			(*cpt[1])[i].push_back(network.Pres_Graph[i].CPT[j]);
 			(*cpt[2])[i].push_back(network.Pres_Graph[i].CPT[j]);
 		}
 	}
-
 }
 
 /* reads raw data and puts it into member field called data. */
@@ -141,7 +140,6 @@ void Trainer::read_data(std::string filename) {
 		if ( complete_datapoint ) {
 			incomplete_node.push_back(-1);
 		}
-
 		#define obs data[lines_read-1]
 		updateAll_CPT_using_observation(obs);
 		#undef obs

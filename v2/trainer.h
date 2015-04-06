@@ -11,16 +11,18 @@
 #include <stack>
 #include <algorithm>
 #include <functional>
-#include "network.h"
-
 #include <stdio.h>
 #include <time.h>
 #include <cmath>
 
+#define ATLEAST_ONE_COUNT 1
+
+#include "network.h"
+
 /* Each observation is just a sequence of strings */
 typedef  vector<std::string> Observation;
 #define TEN_MINUTES 600
-#define TEN_SECONDS 60
+#define SIXTY_SECONDS 60
 using namespace std;
 
 void remove_quotes(std::string& x) {
@@ -56,7 +58,7 @@ public:
 	Trainer() { 		/* set seed. start the time, prevent segfaults, and go. */
 		srand(time(NULL));
 		clocky = clock();
-		maxtime = TEN_SECONDS; //10 minutes.
+		maxtime = SIXTY_SECONDS; //10 minutes.
 		cpt[0] = new std::vector<std::vector<float> >();
 		cpt[1] = new std::vector<std::vector<float> >();
 		cpt[2] = new std::vector<std::vector<float> >(); //stores the best so far.
@@ -74,7 +76,7 @@ public:
 		for(int i=0; i<network.netSize(); ++i) {
 			if ( obs[i] == "\"?\"") return i;
 		} return -1;
-	}	
+	}
 	void swap_cpts(int i=0, int j=1) { //swaps the ith and jth cpts.
 		std::vector<std::vector<float> >* temp = cpt[i];
 		cpt[i] = cpt[j];

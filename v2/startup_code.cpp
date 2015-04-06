@@ -19,14 +19,6 @@ int main(int argc, char** argv)
 	read_network(trainer.network, "alarm.bif"); //reads alarm.bif
     read_network(trainer.gold_network, "gold_alarm.bif"); //reads alarm.bif
     trainer.read_data("records.dat"); //also does counting.
-    
-    for(int i=0; i< trainer.network.netSize(); ++i) {
-        for(int j=0; j<trainer.network.Pres_Graph[i].CPT.size() ; ++j) {
-            cout << (*trainer.cpt[2])[i][j] << " ";
-        }
-        cout << "\n";
-    }
-    cout << "done somehow \n";
     trainer.bulk_em_loop();
     cout<<"Perfect! Hurrah! \n";
 }
