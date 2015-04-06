@@ -13,54 +13,54 @@ using namespace std;
 class Graph_Node{
 
 private:
-	string Node_Name;
-	vector<int> Children;
-	vector<string> Parents;
-	int nvalues;
-	vector<string> values;
-	vector<float> CPT;
+    string Node_Name;
+    vector<int> Children;
+    vector<string> Parents;
+    int nvalues;
+    vector<string> values;
+    vector<float> CPT;
 
 public:
-	//Graph_Node(string name, vector<Graph_Node*> Child_Nodes,vector<Graph_Node*> Parent_Nodes,int n, vector<string> vals,vector<float> curr_CPT)
-	Graph_Node(string name,int n,vector<string> vals)
-	{
-		Node_Name=name;
-		//Children=Child_Nodes;
-		//Parents=Parent_Nodes;
-		nvalues=n;
-		values=vals;
-		//CPT=curr_CPT;
+    //Graph_Node(string name, vector<Graph_Node*> Child_Nodes,vector<Graph_Node*> Parent_Nodes,int n, vector<string> vals,vector<float> curr_CPT)
+    Graph_Node(string name,int n,vector<string> vals)
+    {
+        Node_Name=name;
+        //Children=Child_Nodes;
+        //Parents=Parent_Nodes;
+        nvalues=n;
+        values=vals;
+        //CPT=curr_CPT;
 
-	}
-	string get_name()
-	{
-		return Node_Name;
-	}
-	vector<int> get_children()
-	{
-		return Children;
-	}
-	vector<string> get_Parents()
-	{
-		return Parents;
-	}
-	vector<float> get_CPT()
-	{
-		return CPT;
-	}
-	int get_nvalues()
-	{
-		return nvalues;
-	}
-	vector<string> get_values()
-	{
-		return values;
-	}
-	void set_CPT(vector<float> new_CPT)
-	{
-		CPT.clear();
-		CPT=new_CPT;
-	}
+    }
+    string get_name()
+    {
+        return Node_Name;
+    }
+    vector<int> get_children()
+    {
+        return Children;
+    }
+    vector<string> get_Parents()
+    {
+        return Parents;
+    }
+    vector<float> get_CPT()
+    {
+        return CPT;
+    }
+    int get_nvalues()
+    {
+        return nvalues;
+    }
+    vector<string> get_values()
+    {
+        return values;
+    }
+    void set_CPT(vector<float> new_CPT)
+    {
+        CPT.clear();
+        CPT=new_CPT;
+    }
     void set_Parents(vector<string> Parent_Nodes)
     {
         Parents.clear();
@@ -85,14 +85,14 @@ public:
 
 class network{
 
-	list <Graph_Node> Pres_Graph;
+    list <Graph_Node> Pres_Graph;
 
 public:
-	int addNode(Graph_Node node)
-	{
-		Pres_Graph.push_back(node);
-		return 0;
-	}
+    int addNode(Graph_Node node)
+    {
+        Pres_Graph.push_back(node);
+        return 0;
+    }
     list<Graph_Node>::iterator getNode(int i)
     {
         int count=0;
@@ -105,10 +105,10 @@ public:
         }
         return listIt;
     }
-	int netSize()
-	{
-		return Pres_Graph.size();
-	}
+    int netSize()
+    {
+        return Pres_Graph.size();
+    }
     int get_index(string val_name)
     {
         list<Graph_Node>::iterator listIt;
@@ -147,31 +147,31 @@ public:
             cout<<"node not found\n";
         return listIt;
     }
-	
+    
 
 };
 
 void check_format()
 {
-	network Alarm;
-	string line,testline;
-	int find=0;
-  	ifstream myfile("alarm.bif"); 
+    network Alarm;
+    string line,testline;
+    int find=0;
+    ifstream myfile("alarm.bif"); 
     ifstream testfile("solved_alarm.bif");
-  	string temp;
-  	string name;
-  	vector<string> values;
-  	int line_count=1;
+    string temp;
+    string name;
+    vector<string> values;
+    int line_count=1;
     if (myfile.is_open())
     {
 
-    	while (! myfile.eof() )
-    	{
-    		
-      		getline (myfile,line);
-      		
-      		
-      		
+        while (! myfile.eof() )
+        {
+            
+            getline (myfile,line);
+            
+            
+            
 
             
             getline (testfile,testline);
@@ -184,20 +184,20 @@ void check_format()
             stringstream ss;
             ss.str(line);
             ss>>temp;
-     		
-     		
-     		
-     		if(temp.compare("probability")==0)
-     		{
+            
+            
+            
+            if(temp.compare("probability")==0)
+            {
                     string test_temp;
                     
-    				getline (myfile,line);
+                    getline (myfile,line);
                     getline (testfile,testline);
 
-     				stringstream ss2;
+                    stringstream ss2;
                     stringstream testss2;
                     ss2.str(line);
-     				ss2>> temp;
+                    ss2>> temp;
                     testss2.str(testline);
                     testss2>>test_temp;
                     if(test_temp.compare(temp)!=0)
@@ -205,25 +205,25 @@ void check_format()
                         cout<<"Error Here in line number"<<line_count<<"\n";
                         exit(0);
                     }
-     				ss2>> temp;
+                    ss2>> temp;
                     testss2>>test_temp;
-     				vector<float> curr_CPT;
+                    vector<float> curr_CPT;
                     string::size_type sz;                    
-     				while(temp.compare(";")!=0)
-     				{
+                    while(temp.compare(";")!=0)
+                    {
 
                         if((!atof(test_temp.c_str()))&&(test_temp.compare("0")!=0)&&(test_temp.compare(0,3,"0.0")!=0))
                         {
                             cout<<" Probem in Probab values in line "<<line_count<<"\n";
                             exit(0);
-     					}
+                        }
                         //cout<<"here"<<temp<<"\n";
-     					ss2>>temp;
+                        ss2>>temp;
                         testss2>>test_temp;
                        
                         
 
-    				}
+                    }
                     if(test_temp.compare(";")!=0)
                     {
                         cout<<" Probem in Semi-colon in line "<<line_count<<"\n";
@@ -231,25 +231,25 @@ void check_format()
                     }
                     line_count++;
 
-     		}
+            }
             
-     		
-     		
+            
+            
 
-    		
-    		//myfile.close();
-    	}
+            
+            //myfile.close();
+        }
         if(!testfile.eof())
         {
             cout<<" Test File contains more lines\n";
                         exit(0);
         }   
-    	//cout<<line;
-    	//if(find==1)
-    	myfile.close();
+        //cout<<line;
+        //if(find==1)
+        myfile.close();
         testfile.close();
-  	}
-  	
+    }
+    
   
 }
 
@@ -369,8 +369,8 @@ network read_network(char* filename)
 
 int main()
 {
-	network Alarm1,Alarm2;
-	check_format();
+    network Alarm1,Alarm2;
+    check_format();
     Alarm1=read_network((char*)"solved_alarm.bif");
     Alarm2=read_network((char*)"gold_alarm.bif");
     float score=0;
@@ -385,8 +385,8 @@ int main()
     }
    cout <<"Score is "<<score;
 
-	//cout<<Alarm.netSize();
-	
+    //cout<<Alarm.netSize();
+    
 }
 
 
