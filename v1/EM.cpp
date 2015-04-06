@@ -11,14 +11,14 @@ typedef std::vector<float> CPT;
 
 
 #define ACC 100000000
-double rng(int accuracy = ACC) {
-	return ((rand()%accuracy)/(double)accuracy);
+float rng(int accuracy = ACC) {
+	return ((rand()%accuracy)/(float)accuracy);
 }
 
 
-void probability_table(Trainer& ,Network& n,int node_index, Observation& obs, std::vector<double>& cpt);
-double probability(Trainer&,Network&,int node_index, std::string& val, Observation& obs);
-void complete_data(Network&,Observation& obs,double val ,int node_index, vector<double>& table);
+void probability_table(Trainer& ,Network& n,int node_index, Observation& obs, std::vector<float>& cpt);
+float probability(Trainer&,Network&,int node_index, std::string& val, Observation& obs);
+void complete_data(Network&,Observation& obs,float val ,int node_index, vector<float>& table);
 void EM(Trainer& t,Network& a, Observation&  obs);
 
 
@@ -67,10 +67,10 @@ void EM(Trainer& t,Network& a, Observation&  obs){
 	assert (!is_complete(obs));
 	vector<CPT > init_dist = t.CPT();
 	int incomplete_node_index = incomplete_node(obs);
-	std::vector<double> table; 
+	std::vector<float> table; 
 	probability_table(t,a,incomplete_node_index, obs, table);
 
-	double val = rng();
+	float val = rng();
 
 	complete_data(a,obs, val, incomplete_node_index ,table);
 	
@@ -106,10 +106,10 @@ void maximization(Trainer& t, Observation& obs, int node_index){
 
 // Helper functions
 
-void complete_data(Network& n,Observation& obs, double exp_outcome, int incomplete_node_index, const vector<double> table){
+void complete_data(Network& n,Observation& obs, float exp_outcome, int incomplete_node_index, vector<float> table){
 	#define node n.Pres_Graph[incomplete_node_index]
 	int interval;
-	double acc = 0.0;
+	float acc = 0.0;
 	for (int i = 0; i < table.size(); i++){
 		if (exp_outcome >= acc && exp_outcome < acc + table[i])
 			interval = i;
@@ -132,17 +132,17 @@ bool is_complete(Observation& obs){
 
 
 
-// takes a vector<double> and populates it with the probability distribution of node given by node_index, given all other nodes are as given by the observation
+// takes a vector<float> and populates it with the probability distribution of node given by node_index, given all other nodes are as given by the observation
 
-void probability_table(Trainer& t,Network& n, int node_index, Observation& obs, vector<double>& table){
+void probability_table(Trainer& t,Network& n, int node_index, Observation& obs, vector<float>& table){
 	#define node n.Pres_Graph[node_index]
 
 	for (int i = 0; i < node.nvalues; i++){
 		string val = node.values[i];
-		double logVal = probability(t,n, node_index, val, obs);
+		float logVal = probability(t,n, node_index, val, obs);
 		table.push_back(logVal);
 	}
-	double normalizing_val = -std::accumulate(table.begin(), table.end(), 0);
+	float normalizing_val = -std::accumulate(table.begin(), table.end(), 0);
 
 	for (int i = 0; i < table.size(); i++){
 		table[i] = pow(10, normalizing_val + table[i]);
@@ -155,8 +155,8 @@ void probability_table(Trainer& t,Network& n, int node_index, Observation& obs, 
 // returns probability that var takes on value val given the observation
 // use the CPTs for calculating this
 
-double probability(Trainer& t,Network& n, int node_index, std::string& val, Observation& obs){
-	double _val = 0.0;
+float probability(Trainer& t,Network& n, int node_index, std::string& val, Observation& obs){
+	float _val = 0.0;
 	#define node n.Pres_Graph[node_index]
 
 

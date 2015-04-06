@@ -12,9 +12,9 @@
 #include <functional>
 #include "network.h"
 /* Each observation is just a sequence of */
-typedef  vector<std::string> Observation;
-
 using namespace std;
+typedef  vector<string> Observation;
+
 
 void remove_quotes(std::string& x) {
 	x = x.substr(1 , x.length() - 2);
