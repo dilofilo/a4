@@ -28,20 +28,6 @@ void accumulator(std::vector<float>& vec) {
 	}
 }
 
-void normalize(std::vector<float>& vec) {
-	//TODO: Figure out an easy way of normalization.
-	std::vector<float> antilogs(vec.size(),0);
-	float total=0.0;
-	for(int i=0; i<vec.size(); ++i) {
-		antilogs[i] = antilog10(vec[i]);
-		total += antilogs[i];
-	}
-	//assert : we now have the sum.
-	for(int i=0; i<vec.size(); ++i) {
-		vec[i] = log10 ( antilogs[i]/total );
-	}
-}
-
 void print(std::vector<float>& vec) {
 	cout << "\t(";
 	for (int i = 0; i < vec.size(); ++i)
@@ -71,6 +57,7 @@ void make_usable(std::vector<float>& vec) {
 	for(int i=0; i<antilogs.size(); ++i) {
 		vec[i] = log10(antilogs[i]);
 	}
+	// cout << (numerical_convergence(vec[vec.size()-1],0)) << "=numerical convergence of vec[i]\n"; WORKS!
 }
 /* --------------------------------------------------------------------------------------------- */
 
@@ -105,30 +92,30 @@ float Trainer::probability_given_parents(int idxNode , int idxValue , Observatio
 		cout << " i got this nagging feeling #node=" << idxNode << " #idxvalue=" << idxValue << "\n";
 	}
 	#undef node
-	return log10(((x<EPSILON)?(EPSILON):(x)));
+	return ((x==0)?(0):(log10(x)));//log10(((x<EPSILON)?(EPSILON):(x)));
 }
 /* assigns value to idxNode of obs. */
 
 void Trainer::assign_value(Observation& obs , int idxNode) {
-	int offset = case_offset(obs, network.Pres_Graph[idxNode]);
-	int case_size = network.Pres_Graph[idxNode].CPT.size()/network.Pres_Graph[idxNode].nvalues;
-	int idx_cpt=offset;
+	//int offset = case_offset(obs, network.Pres_Graph[idxNode]);
+	//int case_size = ((network.Pres_Graph[idxNode].CPT.size())/(network.Pres_Graph[idxNode].nvalues));
+	//int idx_cpt=offset;
 	//I now know which case to use.
 	float x = rng(); // range:=(0,1)
-	float toincoss = log10(((x<EPSILON)?(EPSILON):(x)));
+	float toincoss = (x==0)?(0):(log10(x));
 
 	vector<float> consideration;
 	for(int i=0; i< network.Pres_Graph[idxNode].nvalues; ++i) {
 		consideration.push_back(probability( idxNode , i , obs ));
 	} //consideration contains log probabilities.
+	
 	make_usable(consideration);
+	
 	//ASSERT : consideration is now the log of accumulated,normalized probabilities.
 	for(int i=0; i< network.Pres_Graph[idxNode].nvalues;  ++i) {
 		if (toincoss < consideration[i]) {
 			obs[idxNode] = network.Pres_Graph[idxNode].values[i];
 			return;
-		} else {
-			idx_cpt += offset;
 		}
 	}
 	cout << " woopsy \n";
@@ -155,7 +142,7 @@ void Trainer::bulk_recompute_cpt() {
 	//initialize the counts.
 	std::vector<std::vector<int> > counts(network.Pres_Graph.size());
 	for(int i=0; i<network.Pres_Graph.size(); ++i) {
-		counts[i].resize(network.Pres_Graph[i].CPT.size(),1);
+		counts[i].resize(network.Pres_Graph[i].CPT.size(),0); //TODO : Decide b/w 0 and 1.
 	}
 	/* count! */
 	for(int i=0; i<working_data.size(); ++i) {
@@ -185,7 +172,7 @@ void Trainer::bulk_recompute_cpt() {
 			if ( sums[i%jp] == 0 ) {
 				(*cpt[0])[n][i] = 0.0;
 			} else {
-				(*cpt[0])[n][i] = counts[n][i]/(float)sums[i%jp];
+				(*cpt[0])[n][i] = (counts[n][i]/(float)sums[i%jp]);
 			}
 		}
 	}
@@ -204,7 +191,7 @@ bool Trainer::convergence() {
 		float gold_error=0.0;
 		for(int n=0; n<network.Pres_Graph.size(); ++n) {
 			for(int c=0; c < network.Pres_Graph[n].CPT.size(); ++c) {
-				inter_cpt_error +=  (*cpt[0])[n][c] - (*cpt[1])[n][c] ;
+				inter_cpt_error +=  abs((*cpt[0])[n][c] - (*cpt[1])[n][c]) ;
 				gold_error += abs( (*cpt[0])[n][c] - gold_network.Pres_Graph[n].CPT[c]);
 			}
 		}

@@ -167,7 +167,7 @@ public:
 
 void Network::fixup() {
     for (int i=0; i<Pres_Graph.size(); ++i) {
-        Pres_Graph[i].counts.resize( Pres_Graph[i].CPT.size() , 0);
+        Pres_Graph[i].counts.resize( Pres_Graph[i].CPT.size(),0);
     }
 }
 

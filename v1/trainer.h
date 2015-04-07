@@ -63,9 +63,11 @@ void sort_incomplete_data(Network& n, vector<Observation>& data){
 
 int incomplete_node(const Observation& obs){
 	
-	for (int i = 0; i < obs.size(); i++)
-		if (obs[i] == "\"?\"")
+	for (int i = 0; i < obs.size(); i++) {
+		if (obs[i] == "\"?\"") {
 			return i;
+		}
+	}
 	return -1;
 }
 
@@ -136,5 +138,14 @@ public:
 	vector<vector<float> > CPT();     
 	/* compute error. */
 	float calc_error();
+
+	void un_update_count(Graph_Node& n, Observation& obs){
+		int cas = which_case(obs , n);
+	// cout << "#brk2.75 , updatecount() after which case\n";
+		if (cas >= 0) {
+			n.counts[cas] -= 1;
+			assert( n.counts[cas] >= 0);
+		}
+	}
 };
 #endif

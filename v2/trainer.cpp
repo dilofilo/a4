@@ -113,6 +113,7 @@ void Trainer::read_data(std::string filename) {
 	string obs_line;
 	int lines_read=0;
 	bool complete_datapoint=true;
+	
 	while( !datfile.eof() ) {
 		complete_datapoint=true; /* reset it for each line. */
 		getline(datfile , obs_line);

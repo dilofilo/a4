@@ -7,7 +7,7 @@ int main(){
 
 	trainer.read_data("records.dat");
 	// cout << trainer.calc_error() << '\n' ;
-	EM2(trainer, trainer.network );
+	EM2(trainer,1<<30);
 	//trainer.write_data();
 	cout << trainer.calc_error();
 

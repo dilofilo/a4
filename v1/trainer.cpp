@@ -19,7 +19,7 @@ void Trainer::read_data(std::string filename) {
 	bool complete_value=true;
 	while( !datfile.eof() ) {
 		//Read one line, parse it.
-
+		complete_value = true;
 		getline(datfile , obs_line);
 		++lines_read;
 		stringstream temp(obs_line);
@@ -102,10 +102,12 @@ void Trainer::convertToCPT(Graph_Node& n){
 		sums[i] = sum;
 	}
 	for (int i = 0; i < n.counts.size(); i++){
-		if (sums[i % jp] == 0) 
+		if (sums[i % jp] == 0) {
 			n.CPT[i] = 0.0;
-		else
-			n.CPT[i] = n.counts[i]/double(sums[i % jp]);
+		}
+		else {
+			n.CPT[i] = ((n.counts[i])/((double)(sums[i % jp])));
+		}
 	}
 }
 
@@ -172,7 +174,7 @@ void complete_data(Network& n,Observation& obs, float exp_outcome, int incomplet
 			interval = i;
 			break;
 		}
-		acc+= table[i];
+		acc += table[i];
 	}
 
 	obs[incomplete_node_index] = node.values[interval];
@@ -183,9 +185,11 @@ void complete_data(Network& n,Observation& obs, float exp_outcome, int incomplet
 
 // for checking asserts
 bool is_complete(Observation& obs){
-	for (int i = 0; i < obs.size(); i++)
-		if (obs[i] == "\"?\"")
+	for (int i = 0; i < obs.size(); i++) {
+		if (obs[i] == "\"?\""){
 			return false;
+		}
+	}
 	return true;
 }
 
@@ -221,6 +225,8 @@ void EM_complete_data(Trainer& t){
 		if (!is_complete(DATA[i]))
 			{
 				EM(t, a, DATA[i]);
+				//for (int j = 0; j < DATA[i].size(); j++) cout << DATA[i][j] << ",";
+				// cout << '\n';
 				t.complete_observation[i] = true;
 			}
 
@@ -231,37 +237,102 @@ void EM_complete_data(Trainer& t){
 	#undef a
 }
 
-void EM2(Trainer& t, Network& a) {
+void undo_obs(Trainer& t, Observation& obs, int node_index);
+void recompute(Trainer&);
+void EM2(Trainer& t,int n) {
 	#define DATA t.data
-	sort_incomplete_data(a,DATA);
-	vector<CPT> init_dist = t.CPT();
+	#define a t.network
+	//sort_incomplete_data(a,DATA);
+	 //depends on node's cpt being updated.
 	std::vector<float> table;
 	std::vector<pair<int, int> > incomplete_node_indices;
 	for (int i = 0; i < DATA.size(); i++){
 		if (!is_complete(DATA[i])){
+			
 			int incomplete_node_index = incomplete_node(DATA[i]);
-			probability_table(t,a,incomplete_node_index,DATA[i], table);
-			float val = rng();
+			
+			assert( incomplete_node_index != -1 );
+			
+			probability_table(t,a,incomplete_node_index,DATA[i], table); //bloats table
+			
+			float val = rng(); //belongs to 0,1. 
 			complete_data(a,DATA[i], val, incomplete_node_index, table);
-			maximization(t, DATA[i], incomplete_node_index);
+			
 			incomplete_node_indices.push_back(make_pair(i,incomplete_node_index));
-
-
-			table.clear();
+			
+			table.clear(); //unbloats table.
 		}
 	}
-	vector<CPT> final_cpt = t.CPT();
-	if (converges(init_dist, final_cpt)){return;}
+	recompute(t);
+	
+	if (n == 0){return;}
 	else{
-		for (int i = 0; i < incomplete_node_indices.size(); i++)
-			DATA[incomplete_node_indices[i].first][incomplete_node_indices[i].second] = "\"?\"";
+		for (int i = 0; i < incomplete_node_indices.size(); i++) {
+			undo_obs(t, DATA[incomplete_node_indices[i].first], incomplete_node_indices[i].second);
+		}
 		cout << "ERROR: " << t.calc_error() << '\n';
-		EM2(t, a);
+		EM2(t, n-1);
 	}
 
 	#undef DATA
+	#undef a
 }
 
+void recompute(Trainer& t){
+	#define DATA t.data
+	#define NET t.network
+	std::vector<std::vector<int> > counts(NET.Pres_Graph.size());
+	for(int i=0; i<NET.Pres_Graph.size(); ++i) {
+		counts[i].resize(NET.Pres_Graph[i].CPT.size(),0); 
+	}
+	for (int i = 0; i < DATA.size(); i++){
+		assert (is_complete(DATA[i]));
+		for (int j = 0; j < NET.Pres_Graph.size(); j++)
+		{
+			int _case = t.which_case(DATA[i],NET.Pres_Graph[j]);
+			if (_case > 0)
+				counts[j][_case] +=1;
+		}
+	}
+
+	for (int n = 0; n < counts.size(); n++){
+		#define node NET.Pres_Graph[n]
+		int jp = node.CPT.size()/node.nvalues;
+		vector<int> sums(jp, 0);
+		for (int i = 0; i < jp; i++){
+			int sum = 0;
+			int t2 = i;
+			while (t2 < counts[n].size()){
+				sum+= counts[n][t2];
+				t2+=jp;
+			}
+			sums[i] = sum;
+		}
+
+		for (int i = 0; i < counts[n].size(); i++){
+			if (sums[i % jp] == 0) {
+				node.CPT[i] = 0.0;
+			}
+			else {
+				
+				node.CPT[i] = ((counts[n][i])/((float)(sums[i % jp])));
+				
+			}
+
+		}
+		float aux_sum = 0;
+		for (int i = 0; i < node.CPT.size(); i++) aux_sum += node.CPT[i];
+		cout << aux_sum << '\n';
+		
+
+		#undef node
+	}
+
+
+
+	#undef DATA
+	#undef network
+}
 
 void EM(Trainer& t,Network& a, Observation&  obs){
 	assert (!is_complete(obs));
@@ -284,21 +355,32 @@ void EM(Trainer& t,Network& a, Observation&  obs){
 			return;
 		}
 	else{
-		obs[incomplete_node_index] = "\"?\"";
+		undo_obs(t, obs, incomplete_node_index);
 		EM(t, a, obs);
 	}
 }
 
 
+void undo_obs(Trainer& t, Observation& obs, int node_index){
+	
+	
+	obs[node_index] = "\"?\"";
+
+}
+
 void maximization(Trainer& t, Observation& obs, int node_index){
 	#define node t.network.Pres_Graph[node_index]
 	#define graph t.network.Pres_Graph
+	
+	assert( is_complete(obs) );
+
 	t.update_count(node, obs);
 	t.convertToCPT(node);
 	for (int i = 0; i < node.Children.size(); i++){
 		t.update_count(graph[node.Children[i]] , obs);
-		t.convertToCPT(graph[node.Children[i]]);
+		t.convertToCPT(graph[node.Children[i]]);	
 	}
+
 
 	#undef node
 	#undef graph
@@ -319,16 +401,21 @@ void probability_table(Trainer& t,Network& n, int node_index, Observation& obs, 
 	for (int i = 0; i < node.nvalues; i++){
 		string val = node.values[i];
 		float probval = probability(t,n, node_index, val, obs);
+		//ASSERT : probal belongs to (0,1).
 		table.push_back(probval);
-		// assert(probval >= 0);
+		assert(probval >= 0);
 	}
 	float normalizing_val=0.0;
 	for(int i=0; i<table.size(); ++i) {
 		normalizing_val += table[i];
 	}
-	for (int i = 0; i < table.size(); i++){
+
+	assert (normalizing_val != 0);
+	//ASSERT: normalizing val approximates to 1.
+	for (int i = 0; i < table.size(); i++) {
 		table[i] = (table[i]/normalizing_val);
-		assert (table[i]<=1.0 && table[i]>=0.0);
+		assert (table[i]<=1.0); 
+		assert (table[i]>=0.0);
 	}
 
 	#undef node
@@ -339,9 +426,9 @@ void probability_table(Trainer& t,Network& n, int node_index, Observation& obs, 
 // use the CPTs for calculating this
 
 float probability(Trainer& t,Network& n, int node_index, std::string& val, Observation& obs){
+	assert( obs[node_index] == "\"?\"");
 	float _val = 0.0;
 	#define node n.Pres_Graph[node_index]
-
 
 	// compute the val using logs and antilogs
 	typedef vector<int>::iterator itr;
@@ -356,11 +443,14 @@ float probability(Trainer& t,Network& n, int node_index, std::string& val, Obser
 		int child_case = t.which_case(augmented_obs, n.Pres_Graph[*i]);
 		if (n.Pres_Graph[*i].CPT[child_case] == 0) {
 			return 0;
+		} else {
+			_val += log10(n.Pres_Graph[*i].CPT[child_case]);	
 		}
-		_val += log10(n.Pres_Graph[*i].CPT[child_case]);
+		assert(n.Pres_Graph[*i].CPT[child_case] > 0);
 	}
 	#undef node
-	assert( pow(10.0,_val) >= 0 );
+	//cout << pow(10.0, _val) << '\n';
+	//assert( pow(10.0,_val) >= 0 );
 	return pow(10.0,_val);
 }
 
