@@ -1,0 +1,21 @@
+network "AIMA" { 
+}
+variable  "Alarm" { 
+	type discrete[2] {  "True"  "False" };
+}
+variable  "JohnCalls" { 
+	type discrete[2] {  "True"  "False" };
+}
+variable  "MaryCalls" { 
+	type discrete[2] {  "True"  "False" };
+}
+
+probability ( "Alarm" ) {
+	table 0.1 0.9  ;
+}
+probability ( "JohnCalls" "Alarm" ) {
+	table 0.8 0.2 0.2 0.8 ;
+}
+probability ( "MaryCalls" "Alarm" ) {
+	table 0.9 0.3 0.1 0.7 ;
+}

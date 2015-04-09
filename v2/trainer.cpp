@@ -2,7 +2,7 @@
 #define TRAINER_CPP
 
 #include "trainer.h"
-
+#include <cassert>
 
 void Trainer::calc_error() {
 	for(int i=0; i< network.Pres_Graph.size(); ++i) {
@@ -38,6 +38,8 @@ int Trainer::which_case( Observation& obs , Graph_Node& node) {
 	return _case;
 }
 /*if obs[node] = 0th value of node, tells me the case. i.e , offset*/
+
+// NOT-DEPRECATED FUNCTION.  USE
 int Trainer::case_offset(Observation& obs, Graph_Node& node) {
 	int _case = 0;
 	int acc=1;
@@ -126,7 +128,9 @@ void Trainer::read_data(std::string filename) {
 		string var_value;
 		int tempctr=0;
 		while(std::getline(temp, var_value , ' ')) {
-			
+			if ( var_value == "") {
+				continue;
+			}
 			if (var_value=="\"?\"") {
 				complete_datapoint = false;
 				incomplete_node.push_back(tempctr);
@@ -155,23 +159,29 @@ void Trainer::read_data(std::string filename) {
 	return;
 }
 
-void Trainer::write_data(std::ostream& o /*= std::cout*/) {
+double truncate(double x) {
+	int ans = x*10000;
+	double actans = ans/10000.0;
+	return actans;
+}
+
+void Trainer::write_data(std::ostream& o, int cpt_source  /*= std::cout*/) {
 	o << "network Alarm {\n}\n"; //first line.
 	for(int i=0; i<network.Pres_Graph.size();++i) {
 		o << "variable " << network.Pres_Graph[i].Node_Name << " {\n";
 		o << "\ttype discrete[" << network.Pres_Graph[i].nvalues << "] {";
 		for(int j=0; j<network.Pres_Graph[i].values.size(); ++j) {
 			o << network.Pres_Graph[i].values[j] << " ";
-		} o << ";\n}\n";
+		} o << "};\n}\n";
 	}
 	//For all the probabilities.
 	for(int i=0; i<network.Pres_Graph.size(); ++i) {
 		o << "probability ( " << network.Pres_Graph[i].Node_Name;
 		for(int j=0; j<network.Pres_Graph[i].Parents.size(); ++j) {
 			o << " " << network.Pres_Graph[i].Parents[j] << " ";
-		} o << " ) {\n \t table";
-		for(int j=0; j<network.Pres_Graph[i].nvalues; ++j) {
-			o << (*cpt[2])[i][j] << " "; //prints out the best cpt evah
+		} o << " ) {\n \t table ";
+		for(int j=0; j<network.Pres_Graph[i].CPT.size(); ++j) {
+			o << (*cpt[cpt_source])[i][j] << " "; //prints out the best cpt evah
 		} o << ";\n}\n";
 	}
 }

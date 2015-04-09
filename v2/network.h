@@ -23,7 +23,7 @@ public:
 	vector<string> values; // Categories of possible values
 	unordered_map<string,int> valueToInt; //takes in a value and convert it to position.
     
-    vector<float> CPT; // conditional probability table as a 1-d array . Look for BIF format to understand its meaning
+    vector<double> CPT; // conditional probability table as a 1-d array . Look for BIF format to understand its meaning
     vector<int> counts; //Corresponding count for the CPT.
 	// Constructor- a node is initialised with its name and its categories
     Graph_Node(string name,int n,vector<string> vals)
@@ -58,7 +58,7 @@ public:
 	{
 		return Parents;
 	}
-	vector<float> get_CPT()
+	vector<double> get_CPT()
 	{
 		return CPT;
 	}
@@ -70,7 +70,7 @@ public:
 	{
 		return values;
 	}
-	void set_CPT(vector<float> new_CPT)
+	void set_CPT(vector<double> new_CPT)
 	{
 		CPT.clear();
 		CPT=new_CPT;
@@ -300,7 +300,7 @@ void read_network(Network& Alarm , std::string fname)
                     
      				ss2>> temp;
                     
-     				vector<float> curr_CPT;
+     				vector<double> curr_CPT;
                     string::size_type sz;
      				while(temp.compare(";")!=0)
      				{

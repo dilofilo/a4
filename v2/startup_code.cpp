@@ -15,12 +15,20 @@ using namespace std;
 int main(int argc, char** argv)
 {
 	//alarm.bif file and dataset file.
-	Trainer trainer;
-	read_network(trainer.network, "alarm.bif"); //reads alarm.bif
-    read_network(trainer.gold_network, "gold_alarm.bif"); //reads alarm.bif
-    trainer.read_data("records.dat"); //also does counting.
+	   Trainer trainer;
+     string netfilename(argv[1]);
+     string datfilename(argv[2]);
+     trainer.outfilename = "solved_" + netfilename;
+	   read_network(trainer.network, netfilename); //reads alarm.bif
+
+    //read_network(trainer.gold_network, "gold_alarm.bif"); //reads alarm.bif
+    trainer.read_data(datfilename); //also does counting.
+    cout << "data is in order" << '\n';
     trainer.bulk_em_loop();
+    //trainer.new_EM_loop();
     cout<<"Perfect! Hurrah! \n";
+    cout << "TIME TAKEN: " ;
+    cout << ((trainer.clocky - clock())/(double)CLOCKS_PER_SEC) << '\n';
 }
 
 

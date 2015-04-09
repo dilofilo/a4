@@ -18,10 +18,10 @@ private:
     vector<string> Parents;
     int nvalues;
     vector<string> values;
-    vector<float> CPT;
+    vector<double> CPT;
 
 public:
-    //Graph_Node(string name, vector<Graph_Node*> Child_Nodes,vector<Graph_Node*> Parent_Nodes,int n, vector<string> vals,vector<float> curr_CPT)
+    //Graph_Node(string name, vector<Graph_Node*> Child_Nodes,vector<Graph_Node*> Parent_Nodes,int n, vector<string> vals,vector<double> curr_CPT)
     Graph_Node(string name,int n,vector<string> vals)
     {
         Node_Name=name;
@@ -44,7 +44,7 @@ public:
     {
         return Parents;
     }
-    vector<float> get_CPT()
+    vector<double> get_CPT()
     {
         return CPT;
     }
@@ -56,7 +56,7 @@ public:
     {
         return values;
     }
-    void set_CPT(vector<float> new_CPT)
+    void set_CPT(vector<double> new_CPT)
     {
         CPT.clear();
         CPT=new_CPT;
@@ -207,7 +207,7 @@ void check_format()
                     }
                     ss2>> temp;
                     testss2>>test_temp;
-                    vector<float> curr_CPT;
+                    vector<double> curr_CPT;
                     string::size_type sz;                    
                     while(temp.compare(";")!=0)
                     {
@@ -332,7 +332,7 @@ network read_network(char* filename)
                     
                     ss2>> temp;
                     
-                    vector<float> curr_CPT;
+                    vector<double> curr_CPT;
                     string::size_type sz;
                     while(temp.compare(";")!=0)
                     {
@@ -373,13 +373,13 @@ int main()
     check_format();
     Alarm1=read_network((char*)"solved_alarm.bif");
     Alarm2=read_network((char*)"gold_alarm.bif");
-    float score=0;
+    double score=0;
     for(int i=0;i<Alarm1.netSize();i++)
     {
         list<Graph_Node>::iterator listIt1=Alarm1.get_nth_node(i);
         list<Graph_Node>::iterator listIt2=Alarm2.get_nth_node(i);
-        vector<float> cpt1=listIt1->get_CPT();
-        vector<float> cpt2=listIt2->get_CPT();
+        vector<double> cpt1=listIt1->get_CPT();
+        vector<double> cpt2=listIt2->get_CPT();
         for(int j=0;j<cpt1.size();j++)
             score+=fabs(cpt1[j]-cpt2[j]);
     }
