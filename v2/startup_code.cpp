@@ -19,6 +19,7 @@ int main(int argc, char** argv)
      string netfilename(argv[1]);
      string datfilename(argv[2]);
      trainer.outfilename = "solved_" + netfilename;
+     trainer.inputfilename = netfilename;
 	   read_network(trainer.network, netfilename); //reads alarm.bif
 
     //read_network(trainer.gold_network, "gold_alarm.bif"); //reads alarm.bif

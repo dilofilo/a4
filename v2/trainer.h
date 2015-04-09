@@ -37,7 +37,7 @@ public:
 	/* for timing purposes. */
 	clock_t clocky;
 	double maxtime;
-	string outfilename;
+	string outfilename , inputfilename ;
 	/* input network. */
 	Network network;
 	/*for debugging purposes*/
@@ -74,6 +74,7 @@ public:
 	Trainer() { 		/* set seed. start the time, prevent segfaults, and go. */
 		srand(time(NULL));
 		outfilename = "";
+		inputfilename = "";
 		clocky = clock();
 		maxtime = TWO_MINUTES; //10 minutes.
 		cpt[0] = new std::vector<std::vector<double> >();
@@ -142,6 +143,6 @@ public:
 	/* another em... */
 	void new_EM_loop();
 	void compute_cpt0(std::vector<std::vector<double> >& v);
-
+	void fuckyouformatchecker()
 };
 #endif

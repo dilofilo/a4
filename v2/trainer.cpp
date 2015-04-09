@@ -186,6 +186,9 @@ void Trainer::write_data(std::ostream& o, int cpt_source  /*= std::cout*/) {
 	}
 }
 
+void Trainer::fuckyouformatchecker() {
+	fstream i,o;
+}
 
 #include "em.cpp"
 

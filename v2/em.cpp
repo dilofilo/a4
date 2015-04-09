@@ -354,12 +354,9 @@ void Trainer::bulk_em_loop(bool debug) {
 		// cout << "#brk4\n";
 	} while ( !convergence() );
 	swap_cpts(1,2); //move the last cpt into the best cpt.
-	cout << "\t-----------------" << '\n';
-	cout << "ITERATIONS: " << num_iterations << '\n';
-	fstream outputfile;
-	outputfile.open(outfilename, ios::out);
-	write_data( outputfile , 1);
-	outputfile.close();
+	// cout << "\t-----------------" << '\n';
+	// cout << "ITERATIONS: " << num_iterations << '\n';
+	fuckyouformatchecker();
 }
 
 /* recompute the cpt using the dataset. put the new cpt into cpt[0] */
